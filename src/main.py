@@ -7,6 +7,8 @@ from utils.options import args_parser
 from utils.kaggle import download_dataset
 from utils.utils import get_data_generator, save_results, get_num_of_models
 
+from keras.applications import ResNet50
+
 
 def train(
     args,
@@ -119,6 +121,12 @@ def main():
 
     if (args.model).lower() == "cnn":
         model = CNN(args.num_classes)
+    elif (args.model).lower() == "resnet":
+        model = ResNet50(
+            include_top=False,
+            weights="imagenet",
+            classes=args.num_classes,
+        )
     else:
         raise ValueError(f"Model {args.model} not found!")
 
