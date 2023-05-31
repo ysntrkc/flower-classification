@@ -1,28 +1,31 @@
-from keras.models import Sequential
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+import torch.nn as nn
 
 
-def CNN(num_classes=10):
-    model = Sequential()
+class CNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super(CNN, self).__init__()
 
-    model.add(
-        Conv2D(
-            32,
-            kernel_size=3,
-            strides=1,
-            padding="same",
-            activation="relu",
-            input_shape=(128, 128, 3),
+        # convolutional feature extractor layer (128x128x3)
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
         )
-    )
-    model.add(MaxPooling2D(pool_size=2, strides=2))
-    model.add(Conv2D(64, kernel_size=3, strides=1, padding="same", activation="relu"))
-    model.add(MaxPooling2D(pool_size=2, strides=2))
-    model.add(Flatten())
 
-    model.add(Dense(128, activation="relu"))
-    model.add(Dropout(0.25))
-    model.add(Dense(128, activation="relu"))
-    model.add(Dense(num_classes, activation="softmax"))
+        # classifier layer
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=0.5),
+            nn.Linear(64 * 32 * 32, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5),
+            nn.Linear(128, num_classes),
+        )
 
-    return model
+    def forward(self, x):
+        x = self.features(x)
+        x = x.view(-1, 64 * 32 * 32)
+        x = self.classifier(x)
+        return x

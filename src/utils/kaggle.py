@@ -13,7 +13,7 @@ def download_dataset():
     os.makedirs("../data", exist_ok=True)
 
     # download dataset if not exists
-    if not os.path.exists("../data/Flower Classification V2"):
+    if not os.path.exists("../data/Flower Classification"):
         api = KaggleApi()
         api.authenticate()
         api.dataset_download_files(

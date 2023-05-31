@@ -1,6 +1,8 @@
 import os
 import h5py
-from keras.preprocessing.image import ImageDataGenerator
+import torch
+from torchvision import transforms, datasets
+from torch.utils.data import DataLoader
 
 
 def get_data_generator(batch_size=32) -> tuple:
@@ -8,43 +10,44 @@ def get_data_generator(batch_size=32) -> tuple:
     test_dir = "../data/Flower Classification/Testing Data"
     validation_dir = "../data/Flower Classification/Validation Data"
 
-    train_datagen = ImageDataGenerator(
-        rotation_range=10,
-        horizontal_flip=True,
-        vertical_flip=True,
-        width_shift_range=0.1,
-        height_shift_range=0.1,
-        zoom_range=0.1,
-        rescale=1.0 / 255,
+    # define transform for train data
+    train_transform = transforms.Compose(
+        [
+            transforms.RandomRotation(10),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.RandomVerticalFlip(p=0.5),
+            transforms.GaussianBlur(3, sigma=(0.1, 2.0)),
+            transforms.Resize((128, 128)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
     )
 
-    test_datagen = ImageDataGenerator(rescale=1.0 / 255)
+    # define transform for test and validation data
+    test_transform = transforms.Compose(
+        [
+            transforms.Resize((128, 128)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
-    train_generator = train_datagen.flow_from_directory(
-        train_dir,
-        target_size=(128, 128),
-        batch_size=batch_size,
-        class_mode="categorical",
-        shuffle=True,
-        seed=42,
+    # define datasets
+    train_dataset = datasets.ImageFolder(train_dir, transform=train_transform)
+    val_dataset = datasets.ImageFolder(validation_dir, transform=test_transform)
+    test_dataset = datasets.ImageFolder(test_dir, transform=test_transform)
+
+    # define dataloaders
+    train_generator = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=4
     )
-    validation_generator = train_datagen.flow_from_directory(
-        validation_dir,
-        target_size=(128, 128),
-        batch_size=batch_size,
-        class_mode="categorical",
-        shuffle=True,
-        seed=42,
+    validation_generator = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False, num_workers=4
     )
-    test_generator = test_datagen.flow_from_directory(
-        test_dir,
-        target_size=(128, 128),
-        batch_size=batch_size,
-        class_mode="categorical",
-        shuffle=False,
-        seed=42,
+    test_generator = DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=True, num_workers=4
     )
-    print("Data generators created successfully!")
+
     return train_generator, validation_generator, test_generator
 
 
