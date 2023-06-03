@@ -4,12 +4,12 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser(description="Flower Classification")
 
-    parser.add_argument("--batch_size", "-bs", type=int, default=32, help="batch size")
+    parser.add_argument("--batch_size", "-bs", type=int, default=50, help="batch size")
     parser.add_argument(
-        "--epochs", "-e", type=int, default=10, help="number of epochs of training"
+        "--epochs", "-e", type=int, default=100, help="number of epochs of training"
     )
     parser.add_argument(
-        "--learning_rate", "-lr", type=float, default=0.05, help="learning rate"
+        "--learning_rate", "-lr", type=float, default=0.01, help="learning rate"
     )
     parser.add_argument(
         "--num_classes", "-nc", type=int, default=10, help="number of classes"

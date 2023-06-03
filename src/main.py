@@ -11,13 +11,18 @@ from model.models import ResNet50, DenseNet121
 from model.CNN import CNN
 from utils.options import args_parser
 from utils.kaggle import download_dataset
-from utils.utils import get_data_generator, save_results, get_num_of_models, logging_setup
+from utils.utils import (
+    get_data_generator,
+    save_results,
+    get_num_of_models,
+    logging_setup,
+)
 
 
 def test(model, test_generator, loss_fn, device):
     model.eval()
     with torch.no_grad():
-        loss, accuracy = np.zeros(1), np.zeros(1)
+        loss, accuracy = 0.0, 0.0
         for x_batch, y_batch in test_generator:
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
             prediction = model(x_batch)
@@ -41,7 +46,9 @@ def train(
 ):
     os.makedirs(f"../models/{(args.model).lower()}", exist_ok=True)
     model_num = get_num_of_models((args.model).lower())
-    model_path = f"../models/{(args.model).lower()}/{(args.model).lower()}_model_{model_num}.pt"
+    model_path = (
+        f"../models/{(args.model).lower()}/{(args.model).lower()}_model_{model_num}.pt"
+    )
     model.to(args.device)
     torch.save(model.state_dict(), model_path)
 
@@ -50,18 +57,12 @@ def train(
     train_loss, train_accuracy = np.zeros(args.epochs), np.zeros(args.epochs)
     val_loss, val_accuracy = np.zeros(args.epochs), np.zeros(args.epochs)
     test_loss, test_accuracy = np.zeros(args.epochs), np.zeros(args.epochs)
-    count = 0
 
     # start training
     for epoch in range(args.epochs):
-        # control if the model has not improved for 5 epochs
-        if count == 5:
-            break
-        count += 1
-
         # start timer
         start = time.time()
-        
+
         # train
         model.train()
         for x_batch, y_batch in train_generator:
@@ -93,7 +94,6 @@ def train(
 
         if val_loss[epoch] < min_loss:
             min_loss = val_loss[epoch]
-            count = 0
             torch.save(model.state_dict(), model_path)
 
         # test
@@ -125,7 +125,6 @@ def train(
         "test_loss": test_loss,
         "test_accuracy": test_accuracy,
     }
-    
 
 
 def main():
@@ -157,7 +156,7 @@ def main():
     # initialize loss function, optimizer and learning rate scheduler
     loss_fn = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-    lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
     # print header row
     logging.info(
@@ -187,7 +186,7 @@ def main():
     save_results(args, history)
 
     # add a line end of the log file
-    with open(f"../logs/{(args.model).lower()}_log.txt", "a") as f:
+    with open(f"../logs/{(args.model).lower()}.log", "a") as f:
         f.write(f"\n{'='*100}\n")
 
 
