@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import math
 import logging
@@ -12,23 +11,7 @@ from model.models import ResNet50, DenseNet121
 from model.CNN import CNN
 from utils.options import args_parser
 from utils.kaggle import download_dataset
-from utils.utils import get_data_generator, save_results, get_num_of_models
-
-
-def logging_setup(args):
-    # create log folder
-    os.makedirs("../logs", exist_ok=True)
-
-    # set logging format
-    logging.basicConfig(
-        filename=f"../logs/{(args.model).lower()}_log.txt",
-        level=logging.INFO,
-        format="(%(asctime)s.%(msecs)03d %(levelname)s) %(module)s - %(funcName)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-    # set logging to stdout
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+from utils.utils import get_data_generator, save_results, get_num_of_models, logging_setup
 
 
 def test(model, test_generator, loss_fn, device):

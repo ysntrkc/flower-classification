@@ -1,9 +1,26 @@
 import os
+import sys
 import h5py
 import torch
 import logging
 from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
+
+
+def logging_setup(args):
+    # create log folder
+    os.makedirs("../logs", exist_ok=True)
+
+    # set logging format
+    logging.basicConfig(
+        filename=f"../logs/{(args.model).lower()}.log",
+        level=logging.INFO,
+        format="(%(asctime)s.%(msecs)03d %(levelname)s) %(module)s - %(funcName)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # set logging to stdout
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 
 def get_data_generator(batch_size=32) -> tuple:
