@@ -1,6 +1,0 @@
-
-====================================================================================================
-2023-06-01 00:22:42.091 INFO main - main: Arguments: Namespace(batch_size=32, epochs=10, learning_rate=0.05, num_classes=10, device_id=0, device=device(type='cuda', index=0), model='cnn')
-
-====================================================================================================
-(2023-06-01 00:24:26.987 INFO) main - main: Arguments: Namespace(batch_size=32, epochs=10, learning_rate=0.05, num_classes=10, device_id=0, device=device(type='cuda', index=0), model='cnn')

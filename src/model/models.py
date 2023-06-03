@@ -4,7 +4,7 @@ from torchvision.models import DenseNet121_Weights, ResNet50_Weights
 
 
 def ResNet50(num_classes=10):
-    model = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2, include_top=False)
+    model = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
     model.fc = nn.Linear(2048, num_classes)
     return model
 

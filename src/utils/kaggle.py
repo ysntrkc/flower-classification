@@ -2,6 +2,7 @@ import os
 import json
 import glob
 import shutil
+import logging
 
 os.environ["KAGGLE_USERNAME"] = json.load(open("kaggle.json"))["username"]
 os.environ["KAGGLE_KEY"] = json.load(open("kaggle.json"))["key"]
@@ -31,3 +32,7 @@ def download_dataset():
         shutil.rmtree("../data/Flower Classification V2/TFRecords")
         os.rename("../data/Flower Classification V2", "../data/Flower Classification")
         shutil.rmtree("../data/Flower Classification/V2")
+
+        logging.info("Dataset downloaded successfully.")
+    else:
+        logging.info("Dataset already exists.")

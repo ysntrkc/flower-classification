@@ -1,6 +1,7 @@
 import os
 import h5py
 import torch
+import logging
 from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
 
@@ -48,6 +49,10 @@ def get_data_generator(batch_size=32) -> tuple:
         test_dataset, batch_size=batch_size, shuffle=True, num_workers=4
     )
 
+    logging.info(
+        f"Train data: {len(train_dataset)} -- Validation data: {len(val_dataset)} -- Test data: {len(test_dataset)}"
+    )
+
     return train_generator, validation_generator, test_generator
 
 
@@ -60,7 +65,7 @@ def save_results(args, results):
         for key, value in results.items():
             f.create_dataset(key, data=value)
 
-    print("Results saved successfully!")
+    logging.info(f"Results saved to {filename}")
 
 
 def get_num_of_models(model_name):
