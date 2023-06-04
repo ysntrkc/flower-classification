@@ -40,7 +40,7 @@ def evaluate_model(model, test_dataloader, loss_fn, device):
     return test_loss, test_acc
 
 
-def get_data_data_loader(batch_size=50) -> tuple:
+def get_data_loader(batch_size=50) -> tuple:
     train_dir = "../data/Flower Classification/Training Data"
     test_dir = "../data/Flower Classification/Testing Data"
     validation_dir = "../data/Flower Classification/Validation Data"
@@ -52,7 +52,7 @@ def get_data_data_loader(batch_size=50) -> tuple:
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomVerticalFlip(p=0.5),
             transforms.GaussianBlur(3, sigma=(0.1, 2.0)),
-            transforms.Resize((128, 128)),
+            transforms.Resize((150, 150)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
@@ -61,7 +61,7 @@ def get_data_data_loader(batch_size=50) -> tuple:
     # define transform for test and validation data
     test_transform = transforms.Compose(
         [
-            transforms.Resize((128, 128)),
+            transforms.Resize((150, 150)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]

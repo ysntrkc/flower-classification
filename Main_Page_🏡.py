@@ -5,7 +5,7 @@ import streamlit as st
 from PIL import Image
 
 from src.model.CNN import CNN
-from src.model.models import DenseNet121, ResNet50
+from src.model.models import DenseNet121, ResNet18, EfficientNetB0
 
 classes = [
     'Aster',
@@ -42,16 +42,17 @@ def make_prediction(model, image):
     return pred.item()
 
 
-st.set_page_config(page_title="Vegetable Classifier", page_icon="🥦", layout="centered")
-st.title("Vegetable Classifier")
+st.set_page_config(page_title="Flower Classifier", page_icon="🌺", layout="centered")
+st.title("Flower Classifier")
 
 st.write("---")
 
 uploaded_file = st.file_uploader("Choose an image...", type=["png", "jpg", "jpeg"])
 
 cnn_model = CNN(len(classes))
-resnet_model = ResNet50(len(classes))
+resnet_model = ResNet18(len(classes))
 densenet_model = DenseNet121(len(classes))
+efficientnet_model = EfficientNetB0(len(classes))
 
 cnn_model.load_state_dict(
     torch.load("./models/cnn.pt", map_location=torch.device("cpu"))
@@ -62,17 +63,21 @@ resnet_model.load_state_dict(
 densenet_model.load_state_dict(
     torch.load("./models/densenet.pt", map_location=torch.device("cpu"))
 )
-
+efficientnet_model.load_state_dict(
+    torch.load("./models/efficientnet.pt", map_location=torch.device("cpu"))
+)
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, caption="Uploaded Image", width=300, use_column_width=False)
     st.write("")
 
     cnn_result = make_prediction(cnn_model, image)
     resnet_result = make_prediction(resnet_model, image)
     densenet_result = make_prediction(densenet_model, image)
+    efficientnet_result = make_prediction(efficientnet_model, image)
 
     st.write(f"**CNN:** {classes[cnn_result]}")
     st.write(f"**ResNet:** {classes[resnet_result]}")
     st.write(f"**DenseNet:** {classes[densenet_result]}")
+    st.write(f"**EfficientNet:** {classes[efficientnet_result]}")

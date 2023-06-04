@@ -11,7 +11,7 @@ from model.CNN import CNN
 from utils.options import args_parser
 from utils.kaggle import download_dataset
 from utils.utils import (
-    get_data_data_loader,
+    get_data_loader,
     save_results,
     get_num_of_models,
     logging_setup,
@@ -44,9 +44,15 @@ def train(
 
     # initialize the min loss
     min_loss = math.inf
+    counter = 0
 
     # start training
     for epoch in range(args.epochs):
+        # if the loss is not decreasing for 10 epochs, stop training
+        if counter == 10:
+            break
+        counter += 1
+
         # start timer
         start = time.time()
 
@@ -80,6 +86,8 @@ def train(
         lr_scheduler.step()
 
         if val_loss[epoch] < min_loss:
+            counter = 0
+            min_loss = val_loss[epoch]
             torch.save(model.state_dict(), model_path)
 
         # test model
@@ -124,7 +132,7 @@ def main():
     logging.info(f"Arguments: {args}")
 
     # get data data_loaders
-    train_data_loader, validation_data_loader, test_data_loader = get_data_data_loader(
+    train_data_loader, validation_data_loader, test_data_loader = get_data_loader(
         args.batch_size
     )
 
