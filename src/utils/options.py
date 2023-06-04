@@ -9,7 +9,7 @@ def args_parser():
         "--epochs", "-e", type=int, default=100, help="number of epochs of training"
     )
     parser.add_argument(
-        "--learning_rate", "-lr", type=float, default=0.01, help="learning rate"
+        "--learning_rate", "-lr", type=float, default=0.001, help="learning rate"
     )
     parser.add_argument(
         "--num_classes", "-nc", type=int, default=10, help="number of classes"
@@ -26,7 +26,16 @@ def args_parser():
         type=str,
         default="cnn",
         help="model to use",
-        choices=["CNN", "cnn", "ResNet", "resnet", "DenseNet", "densenet"],
+        choices=[
+            "CNN",
+            "cnn",
+            "ResNet",
+            "resnet",
+            "DenseNet",
+            "densenet",
+            "EfficientNet",
+            "efficientnet",
+        ],
     )
 
     args = parser.parse_args()

@@ -23,7 +23,24 @@ def logging_setup(args):
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
 
-def get_data_generator(batch_size=32) -> tuple:
+def evaluate_model(model, test_dataloader, loss_fn, device):
+    model.eval()
+    with torch.no_grad():
+        test_loss = 0
+        test_acc = 0
+        for x_batch, y_batch in test_dataloader:
+            x_batch, y_batch = x_batch.to(device), y_batch.to(device)
+            pred = model(x_batch)
+            loss = loss_fn(pred, y_batch)
+            test_loss += loss.item() * y_batch.size(0)
+            is_correct = (torch.argmax(pred, dim=1) == y_batch).float()
+            test_acc += torch.sum(is_correct).item()
+        test_loss /= len(test_dataloader.dataset)
+        test_acc /= len(test_dataloader.dataset)
+    return test_loss, test_acc
+
+
+def get_data_data_loader(batch_size=50) -> tuple:
     train_dir = "../data/Flower Classification/Training Data"
     test_dir = "../data/Flower Classification/Testing Data"
     validation_dir = "../data/Flower Classification/Validation Data"
@@ -56,13 +73,13 @@ def get_data_generator(batch_size=32) -> tuple:
     test_dataset = datasets.ImageFolder(test_dir, transform=test_transform)
 
     # define dataloaders
-    train_generator = DataLoader(
+    train_data_loader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=4
     )
-    validation_generator = DataLoader(
+    validation_data_loader = DataLoader(
         val_dataset, batch_size=batch_size, shuffle=False, num_workers=4
     )
-    test_generator = DataLoader(
+    test_data_loader = DataLoader(
         test_dataset, batch_size=batch_size, shuffle=True, num_workers=4
     )
 
@@ -70,7 +87,7 @@ def get_data_generator(batch_size=32) -> tuple:
         f"Train data: {len(train_dataset)} -- Validation data: {len(val_dataset)} -- Test data: {len(test_dataset)}"
     )
 
-    return train_generator, validation_generator, test_generator
+    return train_data_loader, validation_data_loader, test_data_loader
 
 
 def save_results(args, results):

@@ -4,42 +4,27 @@ import math
 import logging
 
 import torch
-import numpy as np
 from torch import nn, optim
 
-from model.models import ResNet50, DenseNet121
+from model.models import ResNet18, DenseNet121, EfficientNetB0
 from model.CNN import CNN
 from utils.options import args_parser
 from utils.kaggle import download_dataset
 from utils.utils import (
-    get_data_generator,
+    get_data_data_loader,
     save_results,
     get_num_of_models,
     logging_setup,
+    evaluate_model,
 )
-
-
-def test(model, test_generator, loss_fn, device):
-    model.eval()
-    with torch.no_grad():
-        loss, accuracy = 0.0, 0.0
-        for x_batch, y_batch in test_generator:
-            x_batch, y_batch = x_batch.to(device), y_batch.to(device)
-            prediction = model(x_batch)
-            loss += loss_fn(prediction, y_batch).item() * y_batch.size(0)
-            is_correct = (torch.argmax(prediction, dim=1) == y_batch).float()
-            accuracy += is_correct.sum().item()
-        loss /= len(test_generator.dataset)
-        accuracy /= len(test_generator.dataset)
-    return loss, accuracy
 
 
 def train(
     args,
     model,
-    train_generator,
-    validation_generator,
-    test_generator,
+    train_dataloader,
+    val_dataloader,
+    test_dataloader,
     lr_scheduler,
     optimizer,
     loss_fn,
@@ -53,52 +38,53 @@ def train(
     torch.save(model.state_dict(), model_path)
 
     # initialize variables
+    train_loss, train_acc = [0] * args.epochs, [0] * args.epochs
+    test_loss, test_acc = [0] * args.epochs, [0] * args.epochs
+    val_loss, val_acc = [0] * args.epochs, [0] * args.epochs
+
+    # initialize the min loss
     min_loss = math.inf
-    train_loss, train_accuracy = np.zeros(args.epochs), np.zeros(args.epochs)
-    val_loss, val_accuracy = np.zeros(args.epochs), np.zeros(args.epochs)
-    test_loss, test_accuracy = np.zeros(args.epochs), np.zeros(args.epochs)
 
     # start training
     for epoch in range(args.epochs):
         # start timer
         start = time.time()
 
-        # train
+        # train model
         model.train()
-        for x_batch, y_batch in train_generator:
+        for x_batch, y_batch in train_dataloader:
             x_batch, y_batch = x_batch.to(args.device), y_batch.to(args.device)
-            prediction = model(x_batch)
-            loss = loss_fn(prediction, y_batch)
+            pred = model(x_batch)
+            loss = loss_fn(pred, y_batch)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             train_loss[epoch] += loss.item() * y_batch.size(0)
-            is_correct = (torch.argmax(prediction, dim=1) == y_batch).float()
-            train_accuracy[epoch] += is_correct.sum().item()
-        train_loss[epoch] /= len(train_generator.dataset)
-        train_accuracy[epoch] /= len(train_generator.dataset)
+            is_correct = (torch.argmax(pred, dim=1) == y_batch).float()
+            train_acc[epoch] += torch.sum(is_correct).item()
+        train_loss[epoch] /= len(train_dataloader.dataset)
+        train_acc[epoch] /= len(train_dataloader.dataset)
 
-        # validation
+        # validate model
         model.eval()
         with torch.no_grad():
-            for x_batch, y_batch in validation_generator:
+            for x_batch, y_batch in val_dataloader:
                 x_batch, y_batch = x_batch.to(args.device), y_batch.to(args.device)
-                prediction = model(x_batch)
-                loss = loss_fn(prediction, y_batch)
+                pred = model(x_batch)
+                loss = loss_fn(pred, y_batch)
                 val_loss[epoch] += loss.item() * y_batch.size(0)
-                is_correct = (torch.argmax(prediction, dim=1) == y_batch).float()
-                val_accuracy[epoch] += is_correct.sum().item()
-        val_loss[epoch] /= len(validation_generator.dataset)
-        val_accuracy[epoch] /= len(validation_generator.dataset)
+                is_correct = (torch.argmax(pred, dim=1) == y_batch).float()
+                val_acc[epoch] += torch.sum(is_correct).item()
+        val_loss[epoch] /= len(val_dataloader.dataset)
+        val_acc[epoch] /= len(val_dataloader.dataset)
         lr_scheduler.step()
 
         if val_loss[epoch] < min_loss:
-            min_loss = val_loss[epoch]
             torch.save(model.state_dict(), model_path)
 
-        # test
-        test_loss[epoch], test_accuracy[epoch] = test(
-            model, test_generator, loss_fn, args.device
+        # test model
+        test_loss[epoch], test_acc[epoch] = evaluate_model(
+            model, test_dataloader, loss_fn, args.device
         )
 
         # end timer
@@ -108,22 +94,21 @@ def train(
         logging.info(
             f"{f'{epoch + 1:<4}/{args.epochs:>4}':>9} | "
             f"{train_loss[epoch]:>10.6f} | "
-            f"{train_accuracy[epoch]:>14.6f} | "
+            f"{train_acc[epoch]:>14.6f} | "
             f"{val_loss[epoch]:>15.6f} | "
-            f"{val_accuracy[epoch]:>19.6f} | "
+            f"{val_acc[epoch]:>19.6f} | "
             f"{test_loss[epoch]:>9.6f} | "
-            f"{test_accuracy[epoch]:>13.6f} | "
+            f"{test_acc[epoch]:>13.6f} | "
             f"{end - start:>14.2f}"
         )
 
-    # return results
     return {
         "train_loss": train_loss,
-        "train_accuracy": train_accuracy,
+        "train_acc": train_acc,
         "val_loss": val_loss,
-        "val_accuracy": val_accuracy,
+        "val_acc": val_acc,
         "test_loss": test_loss,
-        "test_accuracy": test_accuracy,
+        "test_acc": test_acc,
     }
 
 
@@ -138,8 +123,8 @@ def main():
 
     logging.info(f"Arguments: {args}")
 
-    # get data generators
-    train_generator, validation_generator, test_generator = get_data_generator(
+    # get data data_loaders
+    train_data_loader, validation_data_loader, test_data_loader = get_data_data_loader(
         args.batch_size
     )
 
@@ -147,9 +132,11 @@ def main():
     if (args.model).lower() == "cnn":
         model = CNN(args.num_classes)
     elif (args.model).lower() == "resnet":
-        model = ResNet50(args.num_classes)
+        model = ResNet18(args.num_classes)
     elif (args.model).lower() == "densenet":
         model = DenseNet121(args.num_classes)
+    elif (args.model).lower() == "efficientnet":
+        model = EfficientNetB0(args.num_classes)
     else:
         raise ValueError(f"Model {args.model} not found!")
 
@@ -174,9 +161,9 @@ def main():
     history = train(
         args,
         model,
-        train_generator,
-        validation_generator,
-        test_generator,
+        train_data_loader,
+        validation_data_loader,
+        test_data_loader,
         lr_scheduler,
         optimizer,
         loss_fn,
