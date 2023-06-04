@@ -1,0 +1,9 @@
+plotly
+streamlit
+h5py
+torch
+torchvision
+pillow
+kaggle
+scikit-learn
+numpy
