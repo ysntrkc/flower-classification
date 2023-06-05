@@ -8,7 +8,7 @@ st.write("---")
 
 st.subheader("Problem Description")
 st.write(
-    "Flowers may need some classification using images as input. For instance some people could want to observe which types of flowers are present in a picture to label them for marketing or just research purposes. Solution to these possible requests we generated three different machine learning models to predict the type of the flower in a picture into 10 different classes and compared the performances of the models to see which one performs the best for our case."
+    "Flowers may need some classification using images as input. For instance some people could want to observe which types of flowers are present in a picture to label them for marketing or just research purposes. Solution to these possible requests we generated four different machine learning models to predict the type of the flower in a picture into 10 different classes and compared the performances of the models to see which one performs the best for our case."
 )
 
 st.subheader("Solution Approach")
