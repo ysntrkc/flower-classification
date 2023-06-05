@@ -14,7 +14,7 @@ st.write(
 st.subheader("Solution Approach")
 st.markdown(
     """
-    We are going to classify the images using CNN, RESNET-18 and DenseNet-121 structure. CNN makes image processing easier by providing us with some useful functions to extract information about images.
+    We are going to classify the images using CNN, RESNET-18, DenseNet-121 and EfficientNet-B0 structures. CNN makes image processing easier by providing us with some useful functions to extract information about images.
 * We can apply convolution operation to detect patterns in images such as edges, shapes etc.
 * We can apply pooling operations to reduce the image size significantly to make calculations faster.
 * Lastly, we can pass the parameters through a fully connected layer for classification.
