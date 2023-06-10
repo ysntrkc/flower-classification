@@ -1,5 +1,6 @@
 import h5py
 import numpy as np
+import pandas as pd
 import streamlit as st
 import plotly.express as px
 
@@ -16,15 +17,45 @@ classes = [
     'Sunflower',
 ]
 
+def plot_graphs(model_name):
+    plot(model_name, "Loss")
+    plot(model_name, "Accuracy")
+    conf_matrix(model_name)
 
-def plot(model_name, model_results, metric):
+def plot(model_name, metric):
+    if metric == "Loss":
+        metric_postfix = "loss"
+    elif metric == "Accuracy":
+        metric_postfix = "acc"
+
+    read_file = h5py.File(f"results/{model_name.lower()}.h5", "r")
+    model_results = pd.melt(pd.DataFrame({
+        "id": range(1, len(read_file[f"train_{metric_postfix}"][read_file[f"train_{metric_postfix}"][:] != 0]) + 1),
+        "Train": read_file[f"train_{metric_postfix}"][read_file[f"train_{metric_postfix}"][:] != 0],
+        "Test": read_file[f"test_{metric_postfix}"][read_file[f"test_{metric_postfix}"][:] != 0],
+        "Validation": read_file[f"val_{metric_postfix}"][read_file[f"val_{metric_postfix}"][:] != 0]
+    }), id_vars=["id"], var_name="Dataset", value_name="value")
+
     fig = px.line(
-        x=range(1, len(model_results) + 1),
-        y=model_results,
+        data_frame=model_results,
+        x='id',
+        y="value",
+        color="Dataset",
         title=f"{model_name} Model {metric}",
     )
     fig.update_yaxes(title_text=metric)
     fig.update_xaxes(title_text="Epochs")
+    st.plotly_chart(fig, use_container_width=True)
+
+def conf_matrix(model_name):
+    cm = np.load(f"files/{model_name.lower()}_conf_matrix.npy")
+    cm = pd.DataFrame(cm, columns=classes, index=classes)
+    fig = px.imshow(
+        cm,
+        labels=dict(x="Predicted", y="Actual", color="Count"),
+        title=f"{model_name} Model Confusion Matrix (Test Data)",
+        color_continuous_scale="blues",
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -32,35 +63,6 @@ st.set_page_config(page_title="Graphs", page_icon="📈", layout="centered")
 st.title("Model Results")
 
 st.write("---")
-
-cnn_model_results = h5py.File("results/cnn.h5", "r")
-resnet_model_results = h5py.File("results/resnet.h5", "r")
-densenet_model_results = h5py.File("results/densenet.h5", "r")
-efficientnet_model_results = h5py.File("results/efficientnet.h5", "r")
-
-test_loss_cnn = cnn_model_results["test_loss"][cnn_model_results["test_loss"][:] != 0]
-test_acc_cnn = cnn_model_results["test_acc"][cnn_model_results["test_acc"][:] != 0]
-
-test_loss_resnet = resnet_model_results["test_loss"][
-    resnet_model_results["test_loss"][:] != 0
-]
-test_acc_resnet = resnet_model_results["test_acc"][
-    resnet_model_results["test_acc"][:] != 0
-]
-
-test_loss_densenet = densenet_model_results["test_loss"][
-    densenet_model_results["test_loss"][:] != 0
-]
-test_acc_densenet = densenet_model_results["test_acc"][
-    densenet_model_results["test_acc"][:] != 0
-]
-
-test_loss_efficientnet = efficientnet_model_results["test_loss"][
-    efficientnet_model_results["test_loss"][:] != 0
-]
-test_acc_efficientnet = efficientnet_model_results["test_acc"][
-    efficientnet_model_results["test_acc"][:] != 0
-]
 
 st.subheader("CNN Model Results")
 st.write(
@@ -70,21 +72,8 @@ st.write(
 	"""
 )
 
-# plot cnn model loss
-plot("CNN", test_loss_cnn, "Loss")
-
-# plot cnn model accuracy
-plot("CNN", test_acc_cnn, "Accuracy")
-
-conf_matrix = np.load("files/cnn_conf_matrix.npy")
-fig = px.imshow(
-    conf_matrix,
-    labels=dict(x="Predicted", y="Actual", color="Count"),
-    x=classes,
-    y=classes,
-    title="CNN Confusion Matrix",
-)
-st.plotly_chart(fig, use_container_width=True)
+# plot graphs for cnn model loss
+plot_graphs("CNN")
 
 st.write("---")
 
@@ -97,21 +86,8 @@ st.write(
 	"""
 )
 
-# plot resnet model loss
-plot("ResNet", test_loss_resnet, "Loss")
-
-# plot resnet model accuracy
-plot("ResNet", test_acc_resnet, "Accuracy")
-
-conf_matrix = np.load("files/resnet_conf_matrix.npy")
-fig = px.imshow(
-    conf_matrix,
-    labels=dict(x="Predicted", y="Actual", color="Count"),
-    x=classes,
-    y=classes,
-    title="ResNet Confusion Matrix",
-)
-st.plotly_chart(fig, use_container_width=True)
+# plot graphs for resnet model loss
+plot_graphs("ResNet")
 
 st.write("---")
 
@@ -124,21 +100,8 @@ st.write(
     """
 )
 
-# plot densenet model loss
-plot("DenseNet", test_loss_densenet, "Loss")
-
-# plot densenet model accuracy
-plot("DenseNet", test_acc_densenet, "Accuracy")
-
-conf_matrix = np.load("files/densenet_conf_matrix.npy")
-fig = px.imshow(
-    conf_matrix,
-    labels=dict(x="Predicted", y="Actual", color="Count"),
-    x=classes,
-    y=classes,
-    title="DenseNet Confusion Matrix",
-)
-st.plotly_chart(fig, use_container_width=True)
+# plot graphs for densenet model loss
+plot_graphs("DenseNet")
 
 st.write("---")
 
@@ -151,18 +114,5 @@ st.write(
     """
 )
 
-# plot densenet model loss
-plot("EfficientNet", test_loss_efficientnet, "Loss")
-
-# plot densenet model accuracy
-plot("EfficientNet", test_acc_efficientnet, "Accuracy")
-
-conf_matrix = np.load("files/efficientnet_conf_matrix.npy")
-fig = px.imshow(
-    conf_matrix,
-    labels=dict(x="Predicted", y="Actual", color="Count"),
-    x=classes,
-    y=classes,
-    title="EfficientNet Confusion Matrix",
-)
-st.plotly_chart(fig, use_container_width=True)
+# plot graphs for efficientnet model loss
+plot_graphs("EfficientNet")
