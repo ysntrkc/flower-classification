@@ -5,6 +5,7 @@
 ## Project Overview
 
 This project is part of the our University's course "Introduction to Deep Learning". The goal of this project is to classify flowers using CNN and 3 different pretrained models (ResNet, DenseNet, EfficientNet). The dataset used is the [Flower Classification | 10 Classes |](https://www.kaggle.com/datasets/utkarshsaxenadn/flower-classification-5-classes-roselilyetc) dataset from Kaggle.
+* You can find more information about the project in the [About Project](https://flowerclassification.streamlit.app/About_Project_%F0%9F%93%96) page.
 
 ## Project Usage (only streamlit page)
 
