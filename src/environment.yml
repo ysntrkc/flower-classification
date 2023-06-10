@@ -145,4 +145,3 @@ dependencies:
       - validators==0.20.0
       - watchdog==3.0.0
       - zipp==3.15.0
-prefix: /home/muhendislik/miniconda3/envs/torch
